@@ -34,10 +34,10 @@ export default function Period({
 	disabled,
 }: PeriodProps) {
 	const today = useMemo(() => new Date(), []);
-	const initialM = (typeof month === "number" ? month : today.getMonth() + 1);
+	const initialM = (typeof month === "number" ? month : today.getMonth() === 0 ? 12 : today.getMonth());
 	// Clamp default year to allowed range 2020–2025
 	const ty = today.getFullYear();
-	const initialY = typeof year === "number" ? year : Math.min(2025, Math.max(2020, ty));
+	const initialY = today.getMonth() === 0 ? (ty - 1) : ty;
 
 	const [m, setM] = useState<number>(initialM);
 	const [y, setY] = useState<number>(initialY);

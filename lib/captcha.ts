@@ -31,7 +31,7 @@ export async function requestWithCaptcha(
         key = (data && (data.key ?? data?.key)) as string | undefined;
       }
       if (!key) throw err;
-      return captcha.challenge(key, doRequest);
+      return captcha.challenge(key, () => requestWithCaptcha(config, captcha, instance));
     }
     throw err;
   }

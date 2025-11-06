@@ -61,7 +61,7 @@ export const CaptchaProvider = ({ children }: { children: React.ReactNode }) => 
 
   const challenge: CaptchaAPI["challenge"] = useCallback(
     (k, retry) => {
-      deferredRef.current?.reject(new Error("Superseded by new captcha challenge"));
+      // deferredRef.current?.reject(new Error("Superseded by new captcha challenge"));
       setOpen(true);
       setKey(k);
       retryRef.current = retry;
@@ -70,7 +70,7 @@ export const CaptchaProvider = ({ children }: { children: React.ReactNode }) => 
         deferredRef.current = { resolve, reject };
       });
     },
-    [fetchCaptchaImage]
+    [key,fetchCaptchaImage]
   );
 
   const onClose = (nextOpen: boolean) => {
