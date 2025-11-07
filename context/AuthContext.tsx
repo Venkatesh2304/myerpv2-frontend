@@ -35,9 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 				const res = await api.get("/me");
 				if (cancelled) return;
 				if (res.data?.authenticated && res.data?.user) {
+					console.log("Authenticated user:", res.data.user);
 					setUser(res.data.user);
 					setCookie("username", res.data.user.username, 10);
 				} else {
+					console.log("User not authenticated");
 					setUser(null);
 					if (window.location.pathname !== "/login") {
 						const here = window.location.pathname + window.location.search;
