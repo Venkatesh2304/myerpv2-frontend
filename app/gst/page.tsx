@@ -12,9 +12,15 @@ import { downloadFromAxiosResponse } from "@/lib/download";
 type SummaryRow = {
   Company: string;
   "GST Type": string;
-  "Invoice Type": string;
   "Taxable Value": number | string;
   CGST: number | string;
+};
+
+// New: API generate stats
+type GenerateStats = {
+  missing: number;
+  mismatch: number;
+  yet_to_be_pushed: number;
 };
 
 export default function GSTPage() {
@@ -25,9 +31,26 @@ export default function GSTPage() {
   );
 }
 
+// Reusable notice box (shared styles)
+function NoticeBox({
+  variant = "error",
+  children,
+}: {
+  variant?: "error" | "warning";
+  children: React.ReactNode;
+}) {
+  const tone =
+    variant === "error"
+      ? "bg-red-50 text-red-800 border-red-200"
+      : "bg-yellow-50 text-yellow-800 border-yellow-200";
+  return <div className={`border rounded-md p-3 text-sm ${tone}`}>{children}</div>;
+}
+
 function GSTContent() {
   const [period, setPeriod] = useState<string>("");
   const [rows, setRows] = useState<SummaryRow[] | null>(null);
+  // New: stats from generate API
+  const [stats, setStats] = useState<GenerateStats | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [downloadingSummary, setDownloadingSummary] = useState(false);
   const [downloadingJson, setDownloadingJson] = useState(false);
@@ -37,6 +60,8 @@ function GSTContent() {
     e.preventDefault();
     if (!period) return;
     setSubmitting(true);
+    // Clear previous stats on new submit
+    setStats(null);
     try {
       const res = await requestWithCaptcha(
         {
@@ -48,6 +73,12 @@ function GSTContent() {
         captcha
       );
       const summary = res?.data?.summary;
+      // Capture counts from API
+      setStats({
+        missing: res?.data?.missing ?? 0,
+        mismatch: res?.data?.mismatch ?? 0,
+        yet_to_be_pushed: res?.data?.yet_to_be_pushed ?? 0,
+      });
       if (Array.isArray(summary)) {
         setRows(summary as SummaryRow[]);
       } else {
@@ -56,6 +87,7 @@ function GSTContent() {
     } catch (err: any) {
       alert(err?.message ?? "Generation failed");
       setRows(null);
+      setStats(null);
     } finally {
       setSubmitting(false);
     }
@@ -123,6 +155,31 @@ function GSTContent() {
             </div>
           </form>
 
+          {/* Notices */}
+          {stats && (
+            <div className="mt-4 space-y-3">
+              {stats.missing > 0 && (
+                <NoticeBox variant="error">
+                  You have {stats.missing} e-invoices not filed. File using{" "}
+                  <a href="/einvoice" className="underline font-medium" target="_blank">
+                    e-Invoice
+                  </a>
+                  .
+                </NoticeBox>
+              )}
+              {stats.mismatch > 0 && (
+                <NoticeBox variant="error">
+                  You have {stats.mismatch} invoices mismatch between IKEA and e-Invoice. Check them in the summary.
+                </NoticeBox>
+              )}
+              {stats.yet_to_be_pushed > 0 && (
+                <NoticeBox variant="warning">
+                  {stats.yet_to_be_pushed} einvoices yet to be auto-pushed to GSTR-1.  Kindly wait one day.
+                </NoticeBox>
+              )}
+            </div>
+          )}
+
           {Array.isArray(rows) && (
             <div className="mt-6">
               {rows.length === 0 ? (
@@ -134,7 +191,6 @@ function GSTContent() {
                       <TableRow>
                         <TableHead>Company</TableHead>
                         <TableHead>GST Type</TableHead>
-                        <TableHead>Invoice Type</TableHead>
                         <TableHead className="text-right">Taxable Value</TableHead>
                         <TableHead className="text-right">CGST</TableHead>
                       </TableRow>
@@ -144,7 +200,6 @@ function GSTContent() {
                         <TableRow key={`${r.Company}-${idx}`}>
                           <TableCell>{r.Company}</TableCell>
                           <TableCell>{r["GST Type"].toLocaleUpperCase()}</TableCell>
-                          <TableCell>{r["Invoice Type"]}</TableCell>
                           <TableCell className="text-right">{r["Taxable Value"]}</TableCell>
                           <TableCell className="text-right">{r.CGST}</TableCell>
                         </TableRow>

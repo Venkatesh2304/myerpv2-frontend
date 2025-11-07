@@ -33,6 +33,6 @@ export async function requestWithCaptcha(
       if (!key) throw err;
       return captcha.challenge(key, () => requestWithCaptcha(config, captcha, instance));
     }
-    throw err;
+    throw err; // propagate original error (e.g., 500) to caller
   }
 }

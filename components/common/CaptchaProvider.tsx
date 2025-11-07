@@ -30,6 +30,7 @@ export const CaptchaProvider = ({ children }: { children: React.ReactNode }) => 
 
   const retryRef = useRef<(() => Promise<AxiosResponse>) | null>(null);
   const deferredRef = useRef<Deferred<AxiosResponse> | null>(null);
+  const programmaticCloseRef = useRef(false); // prevent onClose from cancelling programmatic close
 
   const resetState = () => {
     setCaptcha("");
@@ -40,6 +41,14 @@ export const CaptchaProvider = ({ children }: { children: React.ReactNode }) => 
     retryRef.current = null;
     deferredRef.current = null;
   };
+
+  // Reset input and error when a new captcha key arrives
+  useEffect(() => {
+    if (key) {
+      setCaptcha("");
+      setError(null);
+    }
+  }, [key]);
 
   const fetchCaptchaImage = useCallback(async (k: string) => {
     setPhase("loading");
@@ -70,26 +79,32 @@ export const CaptchaProvider = ({ children }: { children: React.ReactNode }) => 
         deferredRef.current = { resolve, reject };
       });
     },
-    [key,fetchCaptchaImage]
+    [fetchCaptchaImage] // removed `key` to keep reference stable
   );
 
   const onClose = (nextOpen: boolean) => {
     if (!nextOpen) {
-      deferredRef.current?.reject(new Error("Captcha cancelled"));
-      setOpen(false);
+      // Only reject if user/click-driven close, not programmatic close after resolve/reject
+      if (!programmaticCloseRef.current) {
+        deferredRef.current?.reject(new Error("Captcha cancelled"));
+      }
       resetState();
+      setOpen(false);
+      programmaticCloseRef.current = false;
     }
   };
 
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!key || !retryRef.current || !deferredRef.current) return;
+    // Capture current refs to avoid being overwritten by nested challenges
+    const currentRetry = retryRef.current;
+    const currentDeferred = deferredRef.current;
+    if (!key || !currentRetry || !currentDeferred) return;
+
     setPhase("submitting");
     setError(null);
     try {
       const data = await api.post("/custom/login", { key, captcha }).then((res) => res.data);
-      // If backend says ok: false, refresh captcha and keep dialog open
       if (data?.ok === false) {
         setError(data?.message || data?.error || "Invalid captcha, please try again");
         setPhase("idle");
@@ -97,10 +112,17 @@ export const CaptchaProvider = ({ children }: { children: React.ReactNode }) => 
         await fetchCaptchaImage(key);
         return;
       }
-      setOpen(false);
-      const retried = await retryRef.current();
-      deferredRef.current.resolve(retried);
-      resetState();
+
+      // Retry original request using captured retry; propagate its result to the captured deferred
+      try {
+        const retried = await currentRetry();
+        currentDeferred.resolve(retried);
+      } catch (retryErr: any) {
+        currentDeferred.reject(retryErr);
+      } finally {
+        programmaticCloseRef.current = true;
+        setOpen(false);
+      }
     } catch (e: any) {
       setError(e?.message ?? "Something went wrong");
       setPhase("idle");
