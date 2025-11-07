@@ -22,7 +22,7 @@ rm -rf .next dist out
 echo "[+] Building Next.js"
 npm run build
 
-git add * 
+git add .
 git commit -m "Build frontend"
 
 echo "==> Pushing to remote"
