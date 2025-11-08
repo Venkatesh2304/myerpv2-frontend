@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export $(grep -v '^#' .env | xargs)
-
+export $(grep -v '^#' .env.production | xargs)
 echo "[+] Using API base URL: $NEXT_PUBLIC_API_BASE_URL"
-
 
 REMOTE_HOST="ubuntu@43.205.224.85"
 SSH_KEY="/home/venkatesh/Downloads/aws/LightsailDefaultKey-ap-south-1.pem"
