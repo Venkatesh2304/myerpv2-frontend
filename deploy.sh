@@ -27,7 +27,7 @@ echo "==> Pushing to remote"
 git push origin main -f
 
 echo "==> SSH to server"
-ssh -i "$SSH_KEY" "$REMOTE_HOST" bash -lc <<EOF
+ssh -i "$SSH_KEY" "$REMOTE_HOST" bash -l -c <<EOF
   set -euo pipefail
   cd "$REMOTE_DIR"
   echo "[Remote] Running sync.sh..."
