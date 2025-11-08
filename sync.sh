@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 git pull -ff
-pm2 restart myerpv2-frontend
+/home/ubuntu/.nvm/versions/node/v22.14.0/bin/pm2 restart myerpv2-frontend
