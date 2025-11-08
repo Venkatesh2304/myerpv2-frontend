@@ -106,7 +106,11 @@ export const CaptchaProvider = ({ children }: { children: React.ReactNode }) => 
     try {
       const data = await api.post("/custom/login", { key, captcha }).then((res) => res.data);
       if (data?.ok === false) {
-        setError(data?.message || data?.error || "Invalid captcha, please try again");
+        if (data?.error == "invalid_captcha") {
+          setError("Invalid captcha, please try again");
+        } else if (data?.error == "invalid_credentials") {
+          setError(`${data?.message}. Change them in Configuration`);
+        }
         setPhase("idle");
         setCaptcha("");
         await fetchCaptchaImage(key);
@@ -114,14 +118,14 @@ export const CaptchaProvider = ({ children }: { children: React.ReactNode }) => 
       }
 
       // Retry original request using captured retry; propagate its result to the captured deferred
+      programmaticCloseRef.current = true;
+      setOpen(false);
       try {
         const retried = await currentRetry();
         currentDeferred.resolve(retried);
       } catch (retryErr: any) {
         currentDeferred.reject(retryErr);
       } finally {
-        programmaticCloseRef.current = true;
-        setOpen(false);
       }
     } catch (e: any) {
       setError(e?.message ?? "Something went wrong");
@@ -167,7 +171,9 @@ export const CaptchaProvider = ({ children }: { children: React.ReactNode }) => 
               placeholder="Enter captcha"
               disabled={isLoadingImg}
             />
-            {error ? <div className="text-sm text-red-600">{error}</div> : null}
+            {error ?
+              <div className="text-sm text-red-600" dangerouslySetInnerHTML={{ __html: error }} />
+              : null}
 
             <div className="flex gap-2">
               <Button type="submit" disabled={isBusy}>
