@@ -1,5 +1,5 @@
 1:"$Sreact.fragment"
 2:I[39309,["/_next/static/chunks/7d903ced46778887.js","/_next/static/chunks/706dc72f572505f0.js"],"OutletBoundary"]
 3:"$Sreact.suspense"
-0:{"buildId":"Zx4Dzk0QcT2HCUrizeBMc","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"container mx-auto max-w-2xl p-6","children":[["$","h1",null,{"className":"text-xl font-semibold mb-4","children":"Configuration"}],["$","p",null,{"className":"text-sm text-muted-foreground","children":"This is a placeholder configuration page. Add settings here later."}]]}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"p1le3fH1U9cdy7SgkLqc1","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"container mx-auto max-w-2xl p-6","children":[["$","h1",null,{"className":"text-xl font-semibold mb-4","children":"Configuration"}],["$","p",null,{"className":"text-sm text-muted-foreground","children":"This is a placeholder configuration page. Add settings here later."}]]}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"loading":null,"isPartial":false}
 4:null
