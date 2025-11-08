@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 18, "column": 0}, "map": {"version":3,"sources":["file:///home/venkatesh/code/erp/myerpv2/frontend/app/configuration/page.tsx"],"sourcesContent":["\nexport default function ConfigurationPage() {\n  return (\n    <div className=\"container mx-auto max-w-2xl p-6\">\n      <h1 className=\"text-xl font-semibold mb-4\">Configuration</h1>\n      <p className=\"text-sm text-muted-foreground\">\n        This is a placeholder configuration page. Add settings here later.\n      </p>\n    </div>\n  );\n}"],"names":[],"mappings":";;;;;;AACe,SAAS;IACtB,qBACE,oRAAC;QAAI,WAAU;;0BACb,oRAAC;gBAAG,WAAU;0BAA6B;;;;;;0BAC3C,oRAAC;gBAAE,WAAU;0BAAgC;;;;;;;;;;;;AAKnD","debugId":null}}]
-}
