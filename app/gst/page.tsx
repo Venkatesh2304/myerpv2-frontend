@@ -4,6 +4,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Period from "@/components/common/Period";
 import { CaptchaProvider, useCaptcha } from "@/components/common/CaptchaProvider";
 import { requestWithCaptcha } from "@/lib/captcha";
@@ -49,11 +55,12 @@ function NoticeBox({
 function GSTContent() {
   const [period, setPeriod] = useState<string>("");
   const [rows, setRows] = useState<SummaryRow[] | null>(null);
-  // New: stats from generate API
   const [stats, setStats] = useState<GenerateStats | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [downloadingGST, setDownloadingGST] = useState(false);
   const [downloadingSummary, setDownloadingSummary] = useState(false);
   const [downloadingJson, setDownloadingJson] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const captcha = useCaptcha();
 
   const onGenerate = async (e: React.FormEvent) => {
@@ -90,6 +97,28 @@ function GSTContent() {
       setStats(null);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const onDownloadGST = async () => {
+    if (!period) return;
+    setDownloadingGST(true);
+    try {
+      const res = await requestWithCaptcha(
+        {
+          url: "/gst/download",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          responseType: "blob",
+          data: { period },
+        },
+        captcha
+      );
+      downloadFromAxiosResponse(res as any, `gst_${period}.xlsx`);
+    } catch (err: any) {
+      alert(err?.message ?? "Download failed");
+    } finally {
+      setDownloadingGST(false);
     }
   };
 
@@ -134,6 +163,31 @@ function GSTContent() {
       alert(err?.message ?? "Download failed");
     } finally {
       setDownloadingJson(false);
+    }
+  };
+
+  const onUploadGST = async () => {
+    if (!period) return;
+    setUploading(true);
+    try {
+      const res = await requestWithCaptcha(
+        {
+          url: "/gst/upload",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          data: { period },
+        },
+        captcha
+      );
+      if (res?.data?.success) {
+        alert("GST uploaded successfully");
+      } else {
+        alert(`Upload failed: ${res?.data?.error ?? "Unknown error"}`);
+      }
+    } catch (err: any) {
+      alert(err?.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -206,12 +260,40 @@ function GSTContent() {
                       ))}
                     </TableBody>
                   </Table>
-                  <div className="mt-4 flex gap-2">
-                    <Button variant="outline" onClick={onDownloadSummary} disabled={downloadingSummary || !rows?.length}>
-                      {downloadingSummary ? "Downloading..." : "Download Summary"}
+                  <div className="mt-4 inline-flex">
+                    <Button
+                      onClick={onDownloadSummary}
+                      disabled={downloadingSummary || !rows?.length}
+                      className="rounded-r-none"
+                    >
+                      {downloadingSummary ? "Downloading..." : "GST Summary"}
                     </Button>
-                    <Button variant="outline" onClick={onDownloadJson} disabled={downloadingJson || !rows?.length}>
-                      {downloadingJson ? "Downloading..." : "Download JSON"}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="border-l-0 rounded-none px-2"
+                          disabled={!rows?.length}
+                        >
+                          ▼
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={onDownloadGST} disabled={downloadingGST}>
+                          {downloadingGST ? "Downloading..." : "Download GST"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={onDownloadJson} disabled={downloadingJson}>
+                          {downloadingJson ? "Downloading..." : "JSON"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      onClick={onUploadGST}
+                      disabled={uploading || !rows?.length}
+                      className="border-l-0 rounded-l-none"
+                      variant="outline"
+                    >
+                      {uploading ? "Uploading..." : "Upload"}
                     </Button>
                   </div>
                 </>
